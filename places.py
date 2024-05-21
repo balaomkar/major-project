@@ -1,10 +1,105 @@
 from flask import Flask, jsonify, request
 import requests
-# from bs4 import BeautifulSoup
-app = Flask(__name__)
+from flask_cors import CORS
 
+
+app = Flask(__name__)
+CORS(app)
 # Your Geoapify API key
 API_KEY = '34583d847bb34e128d658a90b0119a7d'
+
+def common_method(categories : str, request: dict):
+    place = request.args.get('text')
+    print(place)
+    country_code_filter="in"
+    print(country_code_filter)
+    # Construct the URL for the Geoapify API request
+    url = f'https://api.geoapify.com/v1/geocode/search?text={place}&filter=countrycode:{country_code_filter}&apiKey={API_KEY}'
+
+    # Make the request to the Geoapify API
+    response = requests.get(url)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        # Return the JSON response from the API
+        response1=response.json()
+        # print(response1)
+        coordinates = response1['features'][0]['geometry']['coordinates']
+        lon,lat=coordinates
+        print(lon)
+        categories = categories
+        # lat = request.args.get('lat')
+        # lon = request.args.get('lon')
+        radius = 5000
+        limit = 20
+
+    # Construct the URL for the Geoapify API request
+        url = f'https://api.geoapify.com/v2/places?categories={categories}&filter=circle:{lon},{lat},{radius}&bias=proximity:{lon},{lat}&limit={limit}&apiKey={API_KEY}'
+
+    # Make the request to the Geoapify API
+        response = requests.get(url)
+
+    # Check if the request was successful
+        if response.status_code == 200:
+        # Return the JSON response from the API
+            return jsonify(response.json())
+        else:
+        # Return an error message if the request failed
+            return jsonify({'error': 'Failed to fetch places'}), response.status_code
+
+    else:
+        # Return an error message if the request failed
+        return jsonify({'error': 'Failed to fetch places'}), response.status_code
+
+@app.route("/accommodation/hotel",methods=['GET'])
+def get_accommodation_by_hotel():
+    response =common_method("accommodation.hotel",request)
+    return response
+
+@app.route("/accommodation/guest_house", methods=['GET'])
+def get_accommodation_by_guest_house():
+    response =common_method("accommodation.guest_house",request)
+    return response
+
+@app.route("/food/restaurant", methods=['GET'])
+def get_food_restaurant():
+    response =common_method("catering.restaurant",request)
+    return response
+    
+
+@app.route("/food/restaurant/regional", methods=['GET'])
+def get_food_restaurant_regional():
+    response =common_method("catering.restaurant.regional",request)
+    return response
+
+
+@app.route("/healthcare/hospital", methods=['GET'])
+def get_healthcare_hospital():
+    response =common_method("healthcare.hospital",request)
+    return response
+
+@app.route("/healthcare/pharmacy", methods=['GET'])
+def get_healthcare_pharmacy():
+    response =common_method("healthcare.pharmacy",request)
+    return response
+@app.route("/rental/car",methods=['GET'])
+def get_rental_car():
+    response =common_method("rental.car",request)
+    return response
+
+@app.route("/rental/bicycle",methods=['GET'])
+def get_rental_bicycle():
+    response =common_method("rental.bicycle",request)
+    return response
+
+
+
+# @app.route("/beach",methods=['GET'])
+# def get_beach():
+#     response =common_method("beach",request)
+#     return response
+
+
 
 """
 GET API
